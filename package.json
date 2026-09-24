@@ -1,0 +1,46 @@
+{
+  "name": "flowgen",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "db:generate": "npm run generate --workspace=@automation/db",
+    "db:migrate": "npm run migrate --workspace=@automation/db",
+    "db:studio": "npm run studio --workspace=@automation/db",
+    "db:seed" : "npm run seed --workspace=@automation/db",
+    "client:dev": "npm run dev --workspace=@automation/client",
+    "client:build": "npm run build --workspace=@automation/client",
+    "client:start": "npm run start --workspace=@automation/client",
+    "codegen": "npm run codegen --workspace=@automation/client",
+    "codegen:check": "npm run codegen:check --workspace=@automation/client",
+    "server:dev": "npm run dev --workspace=@automation/server",
+    "server:build": "npm run build --workspace=@automation/server",
+    "server:start": "npm run start --workspace=@automation/server",
+    "worker:dev": "npm run dev --workspace=@automation/worker",
+    "processor:dev": "npm run dev --workspace=@automation/processor",
+    "worker:build": "npm run build --workspace=@automation/worker",
+    "processor:build": "npm run build --workspace=@automation/processor",
+    "build": "concurrently -n client,server,worker,processor -c blue,green,yellow,magenta \"npm run client:build\" \"npm run server:build\" \"npm run worker:build\" \"npm run processor:build\"",
+    "kafka:dev": "concurrently -n worker,processor -c green,yellow,magenta \"npm run worker:dev\" \"npm run processor:dev\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KGLikith/FlowGen.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/KGLikith/FlowGen/issues"
+  },
+  "homepage": "https://github.com/KGLikith/FlowGen#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
