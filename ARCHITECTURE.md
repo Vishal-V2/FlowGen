@@ -32,7 +32,7 @@ flowchart LR
 
   subgraph Runtime[Worker executors]
     Browser[Puppeteer<br/>headless browser]
-    Egress[External HTTP endpoint\nTRIGGER_WEBHOOK action]
+    Egress[External HTTP endpoint<br/>TRIGGER_WEBHOOK action]
   end
 
   User --> UI
@@ -48,10 +48,10 @@ flowchart LR
   Services -->|Read and write data; create execution, phases, and outbox transactionally| Prisma
   Prisma <--> PG
   Processor -->|Poll and delete published outbox rows| PG
-  Processor -->|Initial {executionId, stage: 1}| Kafka
+  Processor -->|Initial event: executionId, stage 1| Kafka
   Kafka -->|workflow-events| Worker
   Worker -->|Load plan/phase; write status, logs, outputs, credits| PG
-  Worker -->|Next {executionId, stage}| Kafka
+  Worker -->|Next stage event| Kafka
   Worker --> Browser
   Worker -->|POST configured target URL| Egress
 ```
