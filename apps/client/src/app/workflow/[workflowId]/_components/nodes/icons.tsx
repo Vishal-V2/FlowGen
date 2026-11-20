@@ -12,6 +12,9 @@ import {
   PlusSquare,
   Link2,
   ScrollText,
+  ListTree,
+  MessageSquare,
+  Timer,
   LayoutDashboard,
 } from "lucide-react"
 import type React from "react"
@@ -34,6 +37,9 @@ export function getTaskIcon(taskKey?: string) {
     ADD_PROPERTY_TO_JSON: <PlusSquare size={20} className="text-orange-400" />,
     NAVIGATE_URL: <Link2 size={20} className="text-orange-400" />,
     SCROLL_TO_ELEMENT: <ScrollText size={20} className="text-orange-400" />,
+    EXTRACT_LIST_TO_JSON: <ListTree size={20} className="text-orange-400" />,
+    SEND_CHAT_MESSAGE: <MessageSquare size={20} className="text-orange-400" />,
+    DELAY: <Timer size={20} className="text-orange-400" />,
   }
 
   return map[key] ?? <Globe size={20} className="text-orange-400" />

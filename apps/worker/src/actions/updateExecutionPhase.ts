@@ -34,7 +34,10 @@ export const updatePendingExecutionPhases = async (
       select: { id: true },
     });
     await prisma.executionPhase.updateMany({
-      where: { id: executionId, status: ExecutionPhaseStatus.PENDING },
+      where: {
+        workflowExecutionId: executionId,
+        status: ExecutionPhaseStatus.PENDING,
+      },
       data: payload,
     });
 

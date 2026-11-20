@@ -12,6 +12,9 @@ import { ReadPropertyFromJSONExecutor } from "../run_functions/read_property_fro
 import { AddPropertyToJSONExecutor } from "../run_functions/add_property_to_json";
 import { NavigateURLExecutor } from "../run_functions/navigate_url";
 import { ScrollToElementExecutor } from "../run_functions/scroll_to_element";
+import { ExtractListToJSONExecutor } from "../run_functions/extract_list_to_json";
+import { SendChatMessageExecutor } from "../run_functions/send_chat_message";
+import { DelayExecutor } from "../run_functions/delay";
 
 export const ExecutorRegistry: Record<string, any> = {
   LAUNCH_BROWSER: LaunchBrowserExecutor,
@@ -27,6 +30,9 @@ export const ExecutorRegistry: Record<string, any> = {
   ADD_PROPERTY_TO_JSON: AddPropertyToJSONExecutor,
   NAVIGATE_URL: NavigateURLExecutor,
   SCROLL_TO_ELEMENT: ScrollToElementExecutor,
+  EXTRACT_LIST_TO_JSON: ExtractListToJSONExecutor,
+  SEND_CHAT_MESSAGE: SendChatMessageExecutor,
+  DELAY: DelayExecutor,
 
 };
 

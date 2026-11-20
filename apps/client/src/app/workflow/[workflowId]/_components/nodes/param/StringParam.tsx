@@ -33,6 +33,9 @@ export default function StringParam({ param, value, updateNodeParamValue, disabl
         placeholder="Enter value here"
         value={stringValue}
         onChange={(e: any) => {
+          // Update the local value immediately so the controlled input never
+          // snaps back to a stale value (which dropped keystrokes and edits).
+          setStringValue(e.target.value)
           updateNodeParamValue(e.target.value)
         }}
         onBlur={(e: any) => {

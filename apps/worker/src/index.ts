@@ -129,14 +129,16 @@ async function main() {
           startedAt,
         });
 
-        let creditsConsumed = 0;
-
-        creditsConsumed = node.data.credits || 0;
+        const plannedCredits = node.data.credits || 0;
 
         const userBalanceUpdateResult = await decrementUserBalance(
           executionWithPhases.userId,
-          creditsConsumed
+          plannedCredits
         );
+        // Only record credits that were actually debited from the user.
+        const creditsConsumed = userBalanceUpdateResult.success
+          ? plannedCredits
+          : 0;
 
         const environment = getEnvironment(executionId);
 
@@ -148,15 +150,21 @@ async function main() {
           logCollector.ERROR(
             userBalanceUpdateResult.error || "Insufficient credit balance"
           );
-          success = false;
         } else {
-          success = await executePhase(
-            phase,
-            node,
-            environment,
-            edges,
-            logCollector
-          );
+          try {
+            success = await executePhase(
+              phase,
+              node,
+              environment,
+              edges,
+              logCollector
+            );
+          } catch (err) {
+            logCollector.ERROR(
+              `Unexpected error: ${(err as Error)?.message ?? String(err)}`
+            );
+            success = false;
+          }
         }
 
         await updateExecutionPhase(phase.id, {
@@ -178,63 +186,27 @@ async function main() {
           },
         });
 
-        if (stage === executionWithPhases._count.phases) {
-
-          await cleanupEnvironment(executionId);
-
-          await updateWorkflowExecution(executionId, {
-            status: success
-              ? WorkflowExecutionStatus.COMPLETED
-              : WorkflowExecutionStatus.FAILED,
-            completedAt: new Date(),
-            workflow: {
-              update: {
-                lastRunStatus: success
-                  ? WorkflowExecutionStatus.FAILED
-                  : WorkflowExecutionStatus.COMPLETED,
-              },
-            },
-          });
-        } else {
-          if (!userBalanceUpdateResult.success) {
-            await updateWorkflowExecution(executionId, {
-              status: WorkflowExecutionStatus.FAILED,
+        if (!success) {
+          // A failed phase stops the run: cancel the remaining phases.
+          await updatePendingExecutionPhases(
+            executionId,
+            {
               completedAt: new Date(),
-              workflow: {
-                update: {
-                  lastRunStatus: WorkflowExecutionStatus.FAILED,
-                },
-              },
-              phases: {
-                updateMany: {
-                  where: { status: ExecutionPhaseStatus.PENDING },
-                  data: {
-                    status: ExecutionPhaseStatus.CANCELLED,
-                  },
-                },
-              },
-            });
-
-            await updatePendingExecutionPhases(
-              executionId,
-              {
-                completedAt: new Date(),
-                status: ExecutionPhaseStatus.CANCELLED,
-              },
-              {
-                logLevel: "ERROR",
-                message:
-                  userBalanceUpdateResult.error ||
-                  "Insufficient credit balance",
-                timestamp: new Date(),
-              }
-            );
-
-            await cleanupEnvironment(executionId);
-            await commitOffset();
-            return;
-          }
-
+              status: ExecutionPhaseStatus.CANCELLED,
+            },
+            {
+              logLevel: "WARN",
+              message: userBalanceUpdateResult.success
+                ? `Cancelled because phase ${stage} failed.`
+                : userBalanceUpdateResult.error ||
+                  "Cancelled: insufficient credit balance.",
+              timestamp: new Date(),
+            }
+          );
+          await finalizeExecution(executionId, false);
+        } else if (stage >= executionWithPhases._count.phases) {
+          await finalizeExecution(executionId, true);
+        } else {
           await producer.send({
             topic,
             messages: [
@@ -251,7 +223,30 @@ async function main() {
 
         await commitOffset();
       } catch (err) {
-        console.log(err);
+        console.error(`❌ Error processing execution ${executionId}:`, err);
+        // Never leave an execution stuck in RUNNING.
+        await prisma.executionPhase
+          .updateMany({
+            where: {
+              workflowExecutionId: executionId,
+              status: ExecutionPhaseStatus.RUNNING,
+            },
+            data: {
+              status: ExecutionPhaseStatus.FAILED,
+              completedAt: new Date(),
+            },
+          })
+          .catch((e) => console.error("Failed to mark running phase:", e));
+        await updatePendingExecutionPhases(
+          executionId,
+          { completedAt: new Date(), status: ExecutionPhaseStatus.CANCELLED },
+          {
+            logLevel: "ERROR",
+            message: "Cancelled due to an internal worker error.",
+            timestamp: new Date(),
+          }
+        );
+        await finalizeExecution(executionId, false);
         await commitOffset();
         return;
       }
@@ -266,6 +261,18 @@ async function main() {
         ]);
       }
     },
+  });
+}
+
+async function finalizeExecution(executionId: string, success: boolean) {
+  await cleanupEnvironment(executionId);
+  const status = success
+    ? WorkflowExecutionStatus.COMPLETED
+    : WorkflowExecutionStatus.FAILED;
+  await updateWorkflowExecution(executionId, {
+    status,
+    completedAt: new Date(),
+    workflow: { update: { lastRunStatus: status } },
   });
 }
 

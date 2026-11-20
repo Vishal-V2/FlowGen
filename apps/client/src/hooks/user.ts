@@ -1,6 +1,6 @@
 import { client } from "@/clients/api";
 import queryClient from "@/clients/queryClient";
-import { CreateCredentialPayload } from "@/gql/graphql";
+import { CreateCredentialPayload, User } from "@/gql/graphql";
 import { CREATE_CREDENTIAL, DELETE_CREDENTIAL } from "@/graphql/mutation/user";
 import {
   CURRENT_USER,
@@ -25,7 +25,9 @@ export const useGetCurrentUser = () => {
       }
     },
   });
-  return { ...query, user: query.data?.getCurrentUser || null };
+  // CURRENT_USER uses the untyped gql tag, so type the result explicitly.
+  const data = query.data as { getCurrentUser?: User | null } | null | undefined;
+  return { ...query, user: data?.getCurrentUser || null };
 };
 
 export const useGetCredentials = () => {

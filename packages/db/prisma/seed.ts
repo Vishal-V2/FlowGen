@@ -354,6 +354,138 @@ async function main() {
     }
   });
 
+  // 11. EXTRACT_LIST_TO_JSON
+  await prisma.availableAction.upsert({
+    where: { key: 'EXTRACT_LIST_TO_JSON' },
+    update: {},
+    create: {
+      name: 'Extract List to JSON',
+      key: 'EXTRACT_LIST_TO_JSON',
+      taskInfo: {
+        create: {
+          label: 'Extract List to JSON',
+          type: 'EXTRACT_LIST_TO_JSON',
+          group: 'DATA_EXTRACTION',
+          isEntryPoint: false,
+          credits: 2,
+          testingAvailable: true,
+          inputs: {
+            create: [
+              { name: 'HTML', type: 'STRING', required: true, variant: 'textarea' },
+              {
+                name: 'Item Selector',
+                type: 'STRING',
+                required: true,
+                hideHandle: true,
+                helperText: 'CSS selector matching each item, e.g. article.product_pod',
+              },
+              {
+                name: 'Fields',
+                type: 'STRING',
+                required: true,
+                hideHandle: true,
+                variant: 'textarea',
+                helperText:
+                  'One field per line as "name: selector". Add @attribute to read an attribute, e.g. "link: h3 a @href".',
+              },
+            ]
+          },
+          outputs: {
+            create: [
+              { name: 'JSON', type: 'STRING', required: true },
+              { name: 'Item Count', type: 'STRING', required: true }
+            ]
+          }
+        }
+      }
+    }
+  });
+
+  // 12. SEND_CHAT_MESSAGE
+  await prisma.availableAction.upsert({
+    where: { key: 'SEND_CHAT_MESSAGE' },
+    update: {},
+    create: {
+      name: 'Send Discord/Slack Message',
+      key: 'SEND_CHAT_MESSAGE',
+      taskInfo: {
+        create: {
+          label: 'Send Discord/Slack Message',
+          type: 'SEND_CHAT_MESSAGE',
+          group: 'INTEGRATIONS',
+          isEntryPoint: false,
+          credits: 1,
+          testingAvailable: true,
+          inputs: {
+            create: [
+              {
+                name: 'Platform',
+                type: 'SELECT',
+                required: true,
+                hideHandle: true,
+                options: ['Discord', 'Slack'],
+              },
+              {
+                name: 'Webhook URL',
+                type: 'STRING',
+                required: true,
+                hideHandle: true,
+                helperText: 'Incoming webhook URL from Discord (Integrations > Webhooks) or Slack.',
+              },
+              { name: 'Message', type: 'STRING', required: true, variant: 'textarea' },
+              {
+                name: 'Data',
+                type: 'STRING',
+                required: false,
+                helperText: 'Optional: connect an output (e.g. JSON) to attach it below the message.',
+              },
+            ]
+          },
+          outputs: {
+            create: []
+          }
+        }
+      }
+    }
+  });
+
+  // 13. DELAY
+  await prisma.availableAction.upsert({
+    where: { key: 'DELAY' },
+    update: {},
+    create: {
+      name: 'Delay',
+      key: 'DELAY',
+      taskInfo: {
+        create: {
+          label: 'Delay',
+          type: 'DELAY',
+          group: 'TIMING',
+          isEntryPoint: false,
+          credits: 1,
+          testingAvailable: true,
+          inputs: {
+            create: [
+              { name: 'Web page', type: 'BROWSER_INSTANCE', required: true },
+              {
+                name: 'Seconds',
+                type: 'STRING',
+                required: true,
+                hideHandle: true,
+                helperText: 'How long to wait (1-15 seconds).',
+              },
+            ]
+          },
+          outputs: {
+            create: [
+              { name: 'Web page', type: 'BROWSER_INSTANCE', required: true }
+            ]
+          }
+        }
+      }
+    }
+  });
+
   console.log('Upserted Actions successfully');
   
   // Link Triggers to Actions

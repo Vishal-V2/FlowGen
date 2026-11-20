@@ -12,6 +12,20 @@ import {
 } from "@/components/ui/select"
 import type { TaskParamProps } from "@/schema/task"
 
+// Options may be stored as JSON ({"label": "...", "value": "..."}) or as plain
+// strings (e.g. "Discord"), where the string is both the label and the value.
+function parseOption(op: string): { label: string; value: string } {
+  try {
+    const parsed = JSON.parse(op)
+    if (parsed && typeof parsed === "object" && "value" in parsed) {
+      return { label: String(parsed.label ?? parsed.value), value: String(parsed.value) }
+    }
+  } catch {
+    // Not JSON: fall through to the plain-string form.
+  }
+  return { label: op, value: op }
+}
+
 export default function SelectorParam({ param, updateNodeParamValue, value, disabled }: TaskParamProps) {
   return (
     <div className="flex flex-col gap-1 w-full">
@@ -35,7 +49,7 @@ export default function SelectorParam({ param, updateNodeParamValue, value, disa
             <SelectLabel className="">Options</SelectLabel>
             {param.options &&
               param.options.map((op) => {
-                const option = JSON.parse(op)
+                const option = parseOption(op)
                 return (
                   <SelectItem className="cursor-pointer" key={option.value} value={option.value}>
                     {option.label}

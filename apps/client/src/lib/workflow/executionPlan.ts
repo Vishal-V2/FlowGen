@@ -97,17 +97,21 @@ export function FlowToExecutionPlan(
 
   executionPlan[0].nodes = [entryPoint];
 
-  for (
-    let phase = 2;
-    phase <= nodes.length && planned.size < nodes.length;
-    phase++
-  ) {
-    const nextPhase: WorkflowExecutionPlanPhase = { phase, nodes: [] };
+  // Topological order: a node is scheduled only after every node connected
+  // into it has been scheduled. One node per phase, numbered 1..N without gaps
+  // (the worker advances stage by stage and stops at the phase count).
+  while (planned.size < nodes.length) {
+    let nextNode: AppNode | undefined;
 
     for (const currentNode of nodes) {
       if (planned.has(currentNode.id)) {
         continue;
       }
+      const incomers = getIncomers(currentNode, nodes, edges);
+      if (!incomers.every((incomer) => planned.has(incomer.id))) {
+        continue;
+      }
+
       const inputs = actions.find((a) => a.key === currentNode.data.type)
         ?.taskInfo.inputs;
       const invalidInputs = getInvalidInputs(
@@ -117,25 +121,25 @@ export function FlowToExecutionPlan(
         inputs || []
       );
       if (invalidInputs.length > 0) {
-        const incomers = getIncomers(currentNode, nodes, edges);
-        if (incomers.every((incomer) => planned.has(incomer.id))) {
-          inputsWithErrors.push({
-            nodeId: currentNode.id,
-            inputs: invalidInputs,
-          });
-        } else {
-          continue;
-        }
+        inputsWithErrors.push({
+          nodeId: currentNode.id,
+          inputs: invalidInputs,
+        });
       }
 
-      nextPhase.nodes.push(currentNode);
-      planned.add(currentNode.id);
+      nextNode = currentNode;
       break;
     }
 
-    if (nextPhase.nodes.length > 0) {
-      executionPlan.push(nextPhase);
-    }
+    // Nothing schedulable (only possible with a cycle, which the editor blocks).
+    if (!nextNode) break;
+
+    planned.add(nextNode.id);
+    const nextPhase: WorkflowExecutionPlanPhase = {
+      phase: executionPlan.length + 1,
+      nodes: [nextNode],
+    };
+    executionPlan.push(nextPhase);
   }
 
   if (inputsWithErrors.length > 0) {
