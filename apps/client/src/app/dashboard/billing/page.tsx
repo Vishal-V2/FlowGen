@@ -9,6 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { CreditCard, TrendingUp, Calendar, Check } from "lucide-react"
 import { useState } from "react"
+import { useGetCurrentUser } from "@/hooks/user"
 
 const creditPackages = [
   {
@@ -85,6 +86,8 @@ const chartConfig = {
 
 export default function BillingPage() {
   const [selectedPackage, setSelectedPackage] = useState("medium")
+  const { user, isLoading } = useGetCurrentUser()
+  const credits = user?.userBalance?.credits ?? 0
 
   return (
       <div className="space-y-8">
@@ -105,7 +108,9 @@ export default function BillingPage() {
             <CardDescription>When your credit balance reaches zero, your workflows will stop working</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-primary mb-4">649</div>
+            <div className="text-4xl font-bold text-primary mb-4">
+              {isLoading ? "…" : credits}
+            </div>
             <div className="text-sm text-muted-foreground">Credits remaining from your current balance</div>
           </CardContent>
         </Card>

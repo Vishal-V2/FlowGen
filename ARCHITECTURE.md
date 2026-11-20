@@ -47,10 +47,10 @@ flowchart LR
   PubSub -->|webhookEvent subscription| GQL
   Services -->|Read and write data; create execution, phases, and outbox transactionally| Prisma
   Prisma <--> PG
-  Processor -->|Poll and delete published outbox rows| PG
+  Processor -->|Poll and delete published outbox rows| Prisma
   Processor -->|Initial event: executionId, stage 1| Kafka
   Kafka -->|workflow-events| Worker
-  Worker -->|Load plan/phase; write status, logs, outputs, credits| PG
+  Worker -->|Load plan/phase; write status, logs, outputs, credits| Prisma
   Worker -->|Next stage event| Kafka
   Worker --> Browser
   Worker -->|POST configured target URL| Egress

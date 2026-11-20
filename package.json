@@ -9,6 +9,7 @@
     "packages/*"
   ],
   "scripts": {
+    "setup:local": "node scripts/setup-local-env.cjs",
     "db:generate": "npm run generate --workspace=@automation/db",
     "db:migrate": "npm run migrate --workspace=@automation/db",
     "db:studio": "npm run studio --workspace=@automation/db",
@@ -30,16 +31,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/KGLikith/FlowGen.git"
+    "url": "git+https://github.com/Vishal-V2/FlowGen.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/KGLikith/FlowGen/issues"
+    "url": "https://github.com/Vishal-V2/FlowGen/issues"
   },
-  "homepage": "https://github.com/KGLikith/FlowGen#readme",
+  "homepage": "https://github.com/Vishal-V2/FlowGen#readme",
   "devDependencies": {
     "concurrently": "^9.2.1"
   }

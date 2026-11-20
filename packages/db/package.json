@@ -6,10 +6,10 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "generate": "prisma generate",
-    "migrate": "prisma migrate dev",
-    "studio": "prisma studio",
-    "seed": "prisma db seed"
+    "generate": "node prisma-cli.cjs generate",
+    "migrate": "node prisma-cli.cjs migrate dev",
+    "studio": "node prisma-cli.cjs studio",
+    "seed": "node prisma-cli.cjs db seed"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.19.17",
+    "dotenv": "^17.2.2",
     "prisma": "^6.16.3",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"

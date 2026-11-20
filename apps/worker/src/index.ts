@@ -1,4 +1,5 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+import path from "path";
 
 import { Kafka } from "kafkajs";
 import {
@@ -26,6 +27,8 @@ import {
   updatePendingExecutionPhases,
 } from "./actions/updateExecutionPhase";
 import { decrementUserBalance } from "./actions/updateUserBalance";
+
+dotenv.config({ path: path.resolve(__dirname, "../../..", ".env") });
 
 const TOPIC_NAME = "workflow-events";
 
@@ -100,7 +103,7 @@ async function main() {
           executionId,
           stage
         );
-
+        console.log("Execution with phases:", executionWithPhases);
         if (!executionWithPhases) {
           console.warn("⚠️ Phase not found, skipping...");
           await commitOffset();

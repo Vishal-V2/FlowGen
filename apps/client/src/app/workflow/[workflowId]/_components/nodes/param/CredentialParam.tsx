@@ -45,7 +45,7 @@ export default function CredentialParam({ param, updateNodeParamValue, value, di
           <SelectGroup className="bg-background w-fit">
             <SelectLabel className="">Credentials</SelectLabel>
             {credentials && credentials.length > 0 ? (
-              credentials.map((credential) => (
+              credentials.map((credential: { id: string; name: string }) => (
                 <SelectItem key={credential.id} value={credential.id} className="cursor-pointer">
                   {credential.name}
                 </SelectItem>

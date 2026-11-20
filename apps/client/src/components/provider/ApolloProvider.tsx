@@ -7,10 +7,23 @@ import LoaderIc from "../loader";
 
 export default function ProviderApollo({
   children,
+  localAuthBypass = false,
 }: {
   children: React.ReactNode;
+  localAuthBypass?: boolean;
 }) {
+  if (localAuthBypass) {
+    return (
+      <ApolloProvider client={createApolloClient(async () => null)}>
+        {children}
+      </ApolloProvider>
+    );
+  }
 
+  return <AuthenticatedApolloProvider>{children}</AuthenticatedApolloProvider>;
+}
+
+function AuthenticatedApolloProvider({ children }: { children: React.ReactNode }) {
   const { getToken, isLoaded } = useAuth();
 
   if (!isLoaded) {

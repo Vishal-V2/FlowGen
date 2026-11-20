@@ -227,8 +227,13 @@ const subscriptions = {
   }
 }
 
+const userResolvers = {
+  userBalance: (user: { UserBalance?: unknown }) => user.UserBalance ?? null,
+};
+
 export const resolvers = {
   queries,
   mutations,
-  subscriptions
+  subscriptions,
+  userResolvers,
 };

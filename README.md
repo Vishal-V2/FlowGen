@@ -33,6 +33,43 @@ It bridges triggers, actions, and data flow between services — turning complex
 | **Realtime** | GraphQL Subscriptions |
 | **Automation Engine** | Node.js executors (with Puppeteer support) |
 
+## Local development
+
+Requirements: Node.js 20 or newer, npm, and Docker with Compose. The worker also needs the Puppeteer-managed Chromium browser installed by the existing npm dependency setup.
+
+1. Create a local environment file and generate its local-only database password and encryption key:
+
+   ```sh
+   npm run setup:local
+   ```
+
+2. `setup:local` enables `LOCAL_AUTH_BYPASS=true` for local development, so you can use a fixed local user without Clerk keys. This bypass only activates in development and the API/client bind to loopback while it is enabled. To use real Clerk authentication, disable the bypass and add the Clerk secret key to `CLERK_SECRET_KEY` and the publishable key to both `CLERK_PUBLISHABLE_KEY` (Express API) and `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (Next.js client). Clerk keys are required for a production client build.
+3. Start PostgreSQL and Kafka. Compose initializes the `workflow-events` topic:
+
+   ```sh
+   docker compose up -d
+   ```
+
+4. Generate the Prisma client, apply migrations, and seed the trigger/action catalog:
+
+   ```sh
+   npm run db:generate
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+5. In separate terminals, start the API, worker/processor, and frontend:
+
+   ```sh
+   npm run server:dev
+   npm run kafka:dev
+   npm run client:dev
+   ```
+
+   Open <http://localhost:3000>. The API health endpoint is <http://localhost:4000/>. Local PostgreSQL is exposed on port `5433` because `5432` is commonly occupied; Kafka uses `9092`.
+
+To build all workspaces after configuring Clerk keys, run `npm run build`.
+
 ---
 
 ## Core Concepts

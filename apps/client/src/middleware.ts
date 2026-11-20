@@ -1,10 +1,10 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
 const isPublicRoute = createRouteMatcher(["/"]);
 const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
 
-export default clerkMiddleware(async (auth, req) => {
+const clerkAuthMiddleware = clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     const { isAuthenticated, } = await auth();
     if (!isAuthenticated) {
@@ -22,6 +22,20 @@ export default clerkMiddleware(async (auth, req) => {
   }
   return NextResponse.next();
 });
+
+export default function middleware(req: NextRequest, event: NextFetchEvent) {
+  if (
+    process.env.NODE_ENV === "development" &&
+    process.env.LOCAL_AUTH_BYPASS === "true"
+  ) {
+    if (isAuthRoute(req)) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+    return NextResponse.next();
+  }
+
+  return clerkAuthMiddleware(req, event);
+}
 
 export const config = {
   matcher: [

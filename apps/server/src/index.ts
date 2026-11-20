@@ -1,16 +1,12 @@
 import initServer from "./app";
 import * as dotenv from "dotenv";
+import path from "path";
 import { altairExpress } from "altair-express-middleware";
 
-
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../../..", ".env") });
 
 async function init() {
   const { app, httpServer } = await initServer(); 
-
-  app.get("/", (req, res) => {
-    res.status(200).send({ message: "Server is running" });
-  });
 
   app.use(
     "/altair",
@@ -20,13 +16,24 @@ async function init() {
     })
   );
 
-  const PORT = process.env.PORT || 4000;
+  const PORT = Number(process.env.PORT || 4000);
+  const host =
+    process.env.NODE_ENV === "development" &&
+    process.env.LOCAL_AUTH_BYPASS === "true"
+      ? "127.0.0.1"
+      : undefined;
 
-  httpServer.listen(PORT, () => {
+  const onListen = () => {
     console.log(`🚀 GraphQL HTTP: http://localhost:${PORT}/graphql`);
     console.log(`📡 Subscriptions WS: ws://localhost:${PORT}/subscriptions`);
     console.log(`🧪 Altair Playground: http://localhost:${PORT}/altair`);
-  });
+  };
+
+  if (host) {
+    httpServer.listen(PORT, host, onListen);
+  } else {
+    httpServer.listen(PORT, onListen);
+  }
   
 }
 

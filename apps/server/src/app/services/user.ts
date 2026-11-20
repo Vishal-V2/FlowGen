@@ -7,6 +7,7 @@ export default class userService {
     try {
       const user = await prisma.user.findUnique({
         where: { clerkId },
+        include: { UserBalance: true },
       });
       return user;
     } catch (err) {

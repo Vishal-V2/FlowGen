@@ -8,7 +8,10 @@ type Props = {
 }
 
 export default async function Page({ params }: Props) {
-  const { userId } = await auth()
+  const localAuthBypass =
+    process.env.NODE_ENV === 'development' &&
+    process.env.LOCAL_AUTH_BYPASS === 'true'
+  const userId = localAuthBypass ? 'local-dev-user' : (await auth()).userId
   const { workflowId } = await params
 
   if (!userId) {

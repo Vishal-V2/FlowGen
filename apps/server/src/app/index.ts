@@ -20,10 +20,25 @@ import { verifyToken } from "@clerk/backend";
 EventEmitter.defaultMaxListeners = 100;
 
 export default async function initServer() {
+  const localAuthBypassEnabled =
+    process.env.LOCAL_AUTH_BYPASS === "true" &&
+    process.env.NODE_ENV === "development";
+
+  if (process.env.LOCAL_AUTH_BYPASS === "true" && !localAuthBypassEnabled) {
+    throw new Error("LOCAL_AUTH_BYPASS is only allowed when NODE_ENV=development.");
+  }
+
   const app = express();
   app.use(cors());
   app.use(express.json());
-  app.use(clerkMiddleware());
+
+  app.get("/", (_req, res) => {
+    res.status(200).send({ message: "Server is running" });
+  });
+
+  if (!localAuthBypassEnabled) {
+    app.use(clerkMiddleware());
+  }
 
   // type Mutation {
   //   ${User.mutations}
@@ -63,6 +78,7 @@ export default async function initServer() {
       Subscription: {
         ...GraphqlData.resolvers.subscriptions,
       },
+      User: GraphqlData.resolvers.userResolvers,
     },
   });
 
@@ -85,9 +101,9 @@ const serverCleanup = useServer(
           ? (ctx.connectionParams.headers as Record<string, any>)?.authorization
           : undefined;
 
-      let clerkId = null;
+      let clerkId = localAuthBypassEnabled ? "local-dev-user" : null;
 
-      if (token) {
+      if (token && !localAuthBypassEnabled) {
         try {
           const verifiedToken = await verifyToken(token.replace("Bearer ", ""), {
             secretKey: process.env.CLERK_SECRET_KEY!,
@@ -126,17 +142,16 @@ const serverCleanup = useServer(
     "/graphql",
     expressMiddleware(gqlserver, {
       context: async ({ req, res }) => {
-        const auth = getAuth(req);
-        let user = null;
+        const clerkId = localAuthBypassEnabled
+          ? "local-dev-user"
+          : getAuth(req).userId;
 
-        if (auth.userId) {
-          user = await userService.upsertUser(auth.userId);
-        }
+        if (clerkId) await userService.upsertUser(clerkId);
 
         return {
           req,
           res,
-          clerkId: auth.userId,
+          clerkId,
           pubsub,
         };
       },

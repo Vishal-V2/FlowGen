@@ -28,34 +28,43 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider
-      afterSignOutUrl={"/sign-in"}
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
-      signInFallbackRedirectUrl={"/sign-in"}
-      appearance={{ baseTheme: [neobrutalism] }}
-    >
+  const localAuthBypass =
+    process.env.NODE_ENV === "development" &&
+    process.env.LOCAL_AUTH_BYPASS === "true";
 
-      <html lang="en" suppressHydrationWarning suppressContentEditableWarning>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          <ProviderApollo>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="dark"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <QueryClientProvider>
-                {children}
-                <Toaster />
-              </QueryClientProvider>
-            </ThemeProvider>
-          </ProviderApollo>
-        </body>
-      </html>
-    </ClerkProvider>
+  const app = (
+    <ProviderApollo localAuthBypass={localAuthBypass}>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <QueryClientProvider>
+          {children}
+          <Toaster />
+        </QueryClientProvider>
+      </ThemeProvider>
+    </ProviderApollo>
+  );
+
+  return (
+    <html lang="en" suppressHydrationWarning suppressContentEditableWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {localAuthBypass ? (
+          app
+        ) : (
+          <ClerkProvider
+            afterSignOutUrl="/sign-in"
+            signInUrl="/sign-in"
+            signUpUrl="/sign-up"
+            signInFallbackRedirectUrl="/sign-in"
+            appearance={{ baseTheme: [neobrutalism] }}
+          >
+            {app}
+          </ClerkProvider>
+        )}
+      </body>
+    </html>
   );
 }

@@ -10,9 +10,13 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const localAuthBypass =
+    process.env.NODE_ENV === "development" &&
+    process.env.LOCAL_AUTH_BYPASS === "true";
+
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      <Sidebar localAuthBypass={localAuthBypass} />
 
       <div className="md:pl-64 transition-all duration-300 z-50">
         <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
@@ -21,9 +25,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <BreadcrumbNav />
             <div className="gap-1 flex items-center">
               <ThemeToggle />
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
+              {!localAuthBypass && (
+                <SignedIn>
+                  <UserButton />
+                </SignedIn>
+              )}
             </div>
           </div>
         </div>

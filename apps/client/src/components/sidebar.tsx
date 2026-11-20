@@ -10,14 +10,17 @@ import { navigation, profileNavigation } from "@/constants/sidebar"
 import { Menu, LogOut } from "lucide-react"
 import Logo from "./logo"
 import { SignOutButton } from "@clerk/nextjs"
+import { useGetCurrentUser } from "@/hooks/user"
 
 interface SidebarProps {
-  credits?: { current: number; total: number }
+  localAuthBypass?: boolean
 }
 
-export function Sidebar({ credits = { current: 649, total: 1000 } }: SidebarProps) {
+export function Sidebar({ localAuthBypass = false }: SidebarProps) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const { user, isLoading } = useGetCurrentUser()
+  const credits = user?.userBalance?.credits ?? 0
 
   useEffect(() => {
     const handleResize = () => {
@@ -40,12 +43,12 @@ export function Sidebar({ credits = { current: 649, total: 1000 } }: SidebarProp
       <div className="px-5 py-4 border-b border-neutral-200 dark:border-neutral-800">
         <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-2">
           <span>Credits</span>
-          <span>{credits.current}/{credits.total}</span>
+          <span>{isLoading ? "…" : credits}/1000</span>
         </div>
         <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
           <div
             className="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all"
-            style={{ width: `${(credits.current / credits.total) * 100}%` }}
+            style={{ width: `${Math.min((credits / 1000) * 100, 100)}%` }}
           />
         </div>
       </div>
@@ -99,15 +102,19 @@ export function Sidebar({ credits = { current: 649, total: 1000 } }: SidebarProp
       </nav>
 
       <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-800 ">
-        <SignOutButton redirectUrl="/dashboard">
-          <Button
-            variant="ghost"
-            className="w-full flex cursor-pointer items-center gap-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
-          >
-            <LogOut className="h-5 w-5" />
-            Logout
-          </Button>
-        </SignOutButton>
+        {localAuthBypass ? (
+          <div className="px-3 py-2 text-sm text-neutral-500">Local development session</div>
+        ) : (
+          <SignOutButton redirectUrl="/dashboard">
+            <Button
+              variant="ghost"
+              className="w-full flex cursor-pointer items-center gap-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
+            >
+              <LogOut className="h-5 w-5" />
+              Logout
+            </Button>
+          </SignOutButton>
+        )}
       </div>
     </div>
   )

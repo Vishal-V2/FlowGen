@@ -1,5 +1,9 @@
 import { Kafka } from "kafkajs";
 import { prisma } from "@automation/db";
+import dotenv from "dotenv";
+import path from "path";
+
+dotenv.config({ path: path.resolve(__dirname, "../../..", ".env") });
 
 const TOPIC_NAME = "workflow-events";
 
